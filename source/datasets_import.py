@@ -45,5 +45,5 @@ def load_datasets_from_file(filename):
 
 
 if __name__ == '__main__':
-    for df in load_datasets_from_file('../datasets/datasets.txt'):
+    for df in load_datasets_from_file('../datasets/config/datasets.txt'):
         print(df.head())
