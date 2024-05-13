@@ -32,6 +32,7 @@ def load_datasets_from_file(filename):
                 if line:  # Ensures that blank lines are skipped
                     try:
                         # Load the dataset into a DataFrame
+                        line = f"../datasets/{line}"
                         dframe = pd.read_csv(line)
                         dataframes.append(dframe)
                     except Exception as e:
