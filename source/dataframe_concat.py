@@ -52,8 +52,42 @@ def concat_dataframes(dataframes):
     return pd.concat(final_dataset, ignore_index=True)
 
 
-# TODO: standardize emotion names
+def standardize_emotion_names(dataframe, emotion_dict):
+    """
+    Standardize the names of emotions in a DataFrame.
 
+    Args:
+    dataframe (pd.DataFrame): The DataFrame containing emotion labels.
+    emotion_dict (dict): A dictionary mapping original emotion names to standardized names.
+
+    Returns:
+    pd.DataFrame: The DataFrame with standardized emotion names.
+    """
+    reverse_emotion_dict = {synonym: emotion for emotion, synonyms in emotion_dict.items() for synonym in synonyms}
+    dataframe['emotion'] = dataframe['emotion'].replace(reverse_emotion_dict)
+    return dataframe
+
+
+# TODO: Complete a dictionary of emotions to standardize the names
+
+emotions_dictionary = {
+    'sadness': ['sad', 'sadness', 'depressed', 0],
+    'happiness': ['happy', 'happiness', 'joy', 1],
+    'neutral': ['neutral', 'indifferent', 'unbiased'],
+    'worry': ['worry', 'anxiety', 'concern'],
+    'surprise': ['surprise', 'astonishment', 'shock', 5],
+    'love': ['love', 'affection', 'adoration', 2],
+    'anger': ['angry', 'rage', 'outrage', 'anger', 3],
+    'relief': ['relief', 'ease', 'comfort'],
+    'fear': ['fear', 'dread', 'terror', 4],
+
+    'empty': ['empty', 'void', 'hollow'],
+    'fun': ['fun', 'joyful', 'amusing'],
+    'hate': ['hate', 'detest', 'loathe'],
+    'enthusiasm': ['enthusiastic', 'excited', 'eager'],
+    'boredom': ['boredom', 'tedium', 'monotony']
+}
 if __name__ == '__main__':
     df_merged = concat_dataframes(load_datasets_from_file('../datasets/config/datasets.txt'))
-    print(df_merged)
+    df_merged_std = standardize_column_names(df_merged, emotions_dictionary)
+    print(df_merged_std.head())
