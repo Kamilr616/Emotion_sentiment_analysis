@@ -1,1 +1,4 @@
-../datasets/tweet_emotions.csv
+tweet_emotions.csv
+Emotion_classify_Data.csv
+emotion_sentimen_dataset.csv
+text.csv
