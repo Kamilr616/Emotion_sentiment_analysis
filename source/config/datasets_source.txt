@@ -1,0 +1,5 @@
+simaanjali/emotion-analysis-based-on-text
+shreejitcheela/text-emotion-recognition
+pashupatigupta/emotion-detection-from-text
+nelgiriyewithana/emotions
+abdallahwagih/emotion-dataset
