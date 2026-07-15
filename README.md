@@ -12,6 +12,8 @@
 
 > 📘 [Technical documentation](docs/TECHNICAL_DOCUMENTATION.md)
 
+> 📄 [Big Data course report](<docs/Projekt - BigData.pdf>) (in Polish)
+
 A text emotion-classification project implemented as a Google Colab/Jupyter
 Notebook. It trains a bidirectional LSTM in TensorFlow/Keras over approximately
 382,000 samples aggregated from public Kaggle datasets and predicts one of
@@ -64,7 +66,8 @@ because the data path and evaluation protocol were corrected.
 
 ## 📋 Archived 2024 results
 
-The included Big Data report records results from the original 80/20 workflow:
+The included [Big Data course report](<docs/Projekt - BigData.pdf>) (in Polish)
+records results from the original 80/20 workflow:
 
 - accuracy: 97.69%;
 - weighted precision / recall / F1: 0.98 / 0.98 / 0.98;
@@ -105,8 +108,7 @@ must not be interpreted as a newly verified result.
 | requirements.txt | Maintained compatible dependency ranges |
 | requirements-recorded.txt | Direct versions observed in the archived 2024 Colab run |
 | scripts/validate_notebook.py | Static notebook syntax, output and secret check |
-| docs/ | Technical documentation and class-distribution chart |
-| documents/ | Original Big Data course report |
+| docs/ | Technical documentation, original Big Data course report and class-distribution chart |
 | THIRD_PARTY_NOTICES.md | External dependency and dataset notices |
 
 ## 🚀 Getting started

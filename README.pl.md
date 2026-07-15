@@ -12,6 +12,8 @@
 
 > 📘 [Dokumentacja techniczna](docs/TECHNICAL_DOCUMENTATION.pl.md)
 
+> 📄 [Sprawozdanie z projektu Big Data](<docs/Projekt - BigData.pdf>)
+
 Projekt klasyfikacji emocji tekstu zaimplementowany jako notatnik Google
 Colab/Jupyter. Trenuje dwukierunkowy LSTM w TensorFlow/Keras na około 382 000
 próbek zagregowanych z publicznych zbiorów Kaggle i przewiduje jedną z 14 klas
@@ -67,7 +69,8 @@ eksperymentem, ponieważ poprawiono przepływ danych i protokół ewaluacji.
 
 ## 📋 Archiwalne wyniki z 2024 roku
 
-Dołączony raport Big Data zapisuje wyniki pierwotnego przebiegu 80/20:
+Dołączone [sprawozdanie z projektu Big Data](<docs/Projekt - BigData.pdf>) zapisuje
+wyniki pierwotnego przebiegu 80/20:
 
 - accuracy: 97,69%;
 - ważona precision / recall / F1: 0,98 / 0,98 / 0,98;
@@ -108,8 +111,7 @@ nie należy jej interpretować jako nowo zweryfikowanego wyniku.
 | requirements.txt | Utrzymywane zgodne zakresy zależności |
 | requirements-recorded.txt | Bezpośrednie wersje zapisane w środowisku Colab 2024 |
 | scripts/validate_notebook.py | Statyczna kontrola składni, outputów i sekretów |
-| docs/ | Dokumentacja techniczna i wykres rozkładu klas |
-| documents/ | Oryginalne sprawozdanie Big Data |
+| docs/ | Dokumentacja techniczna, oryginalne sprawozdanie Big Data i wykres rozkładu klas |
 | THIRD_PARTY_NOTICES.md | Informacje o zewnętrznych zależnościach i danych |
 
 ## 🚀 Szybki start
