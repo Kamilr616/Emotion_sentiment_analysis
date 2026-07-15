@@ -1,0 +1,10 @@
+# Direct packages recorded by the original 2024 Google Colab run.
+# Python 3.10 was used. Transitive dependencies were provided by Colab.
+tensorflow==2.15.0
+pandas==2.0.3
+scikit-learn==1.2.2
+kaggle==1.6.14
+seaborn==0.13.1
+nltk==3.8.1
+numpy==1.25.2
+matplotlib==3.7.1
