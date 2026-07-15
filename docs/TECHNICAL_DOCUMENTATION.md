@@ -2,105 +2,126 @@
 
 ## Scope
 
-This repository contains a Google Colab/Jupyter training workflow for assigning
-one of 14 emotion labels to short English-language text. The complete experiment
-is implemented in `source/Emotion_Sentiment_Analysis_tool.ipynb`; it is not a
-deployed inference service.
+The repository contains a Google Colab/Jupyter training workflow that assigns one
+of 14 emotion labels to short English text. The complete experiment lives in
+source/Emotion_Sentiment_Analysis_tool.ipynb. It is not a deployed inference
+service, and no trained model or dataset is distributed in the repository.
 
 ## Data flow
 
-```mermaid
+~~~mermaid
 flowchart LR
-    CFG["Dataset configuration"] --> KG["Kaggle downloads"]
-    KG --> MAP["Column mapping<br/>text + label"]
-    MAP --> CLEAN["Regex cleaning and<br/>whitespace normalization"]
-    CLEAN --> MERGE["Merge, deduplicate<br/>and shuffle"]
-    MERGE --> ENC["Label encoding,<br/>tokenization and padding"]
-    ENC --> SPLIT["80/20 split"]
-    SPLIT --> MODEL["Embedding + BiLSTM"]
-    MODEL --> REPORT["Metrics and HDF5 model"]
-```
+    CFG["Dataset configuration"] --> KG["Kaggle download"]
+    KG --> MAP["Column and label validation"]
+    MAP --> CLEAN["Regex + chat words + stop words"]
+    CLEAN --> MERGE["Normalize + merge + deduplicate"]
+    MERGE --> SPLIT["Stratified 80/10/10 split"]
+    SPLIT --> TOK["Fit tokenizer on train only"]
+    TOK --> MODEL["Embedding + BiLSTM"]
+    MODEL --> EVAL["Validation + independent test"]
+    EVAL --> ART["Model + inference metadata"]
+~~~
 
-Dataset paths and Kaggle identifiers are read from:
+Kaggle references come from source/config/datasets_source.txt and expected CSV
+names from source/config/datasets.txt. Download or load failures stop execution;
+the workflow no longer continues with a silently incomplete dataset.
 
-- `source/config/datasets.txt`,
-- `source/config/datasets_source.txt`.
-
-Each source is reduced to a text column and an emotion column. Missing records
-are removed, mentions, URLs and non-alphanumeric characters are stripped, and
-whitespace is normalized. The frames are then merged, deduplicated by text and
-shuffled.
-
-The notebook also defines chat-abbreviation expansion and English stop-word
-removal. In the recorded notebook flow, however, whitespace normalization is
-called with the earlier regex-cleaned frame list, so those two intermediate
-transformations do **not** feed the dataset used for training. This distinction
-is preserved here because changing that branch would produce a different
-experiment and invalidate direct comparison with the recorded report.
+Each frame is copied before mutation. Column names and emotion labels are
+normalized, required columns are validated, and unexpected output labels stop
+the run. Missing values, empty texts and duplicate texts are removed. The active
+branch then applies mention/URL/symbol cleaning, chat-abbreviation expansion,
+case-insensitive English stop-word removal and whitespace normalization.
 
 ## Labels and representation
 
-The output classes are:
+The expected classes are sadness, happiness, neutral, worry, surprise, love,
+anger, relief, fear, empty, fun, hate, enthusiasm and boredom.
 
-`sadness`, `happiness`, `neutral`, `worry`, `surprise`, `love`, `anger`,
-`relief`, `fear`, `empty`, `fun`, `hate`, `enthusiasm`, and `boredom`.
-
-Labels are encoded with `LabelEncoder`. A Keras `Tokenizer` with a 60,000-word
-limit is fitted and sequences are padded to 100 tokens. In the current notebook,
-the encoder and tokenizer are fitted before the 80/20 split. This means the
-vocabulary observes the evaluation texts, even though labels and model weights
-are learned only from the training portion.
+LabelEncoder establishes a deterministic class order. The data is split with
+seed 42 and class stratification into 80% training, 10% validation and 10% test.
+The Keras Tokenizer has a 60,000-token limit, an OOV token and a sequence length
+of 100. It is fitted only on training text; validation and test vocabulary cannot
+influence it.
 
 ## Model and training
 
-The sequential model consists of:
+The model contains:
 
-1. an embedding layer with 100-dimensional vectors,
-2. `SpatialDropout1D(0.2)`,
-3. a bidirectional LSTM with 128 units,
-4. batch normalization and `Dropout(0.5)`,
-5. a 14-unit softmax output layer.
+1. a 100-dimensional embedding;
+2. SpatialDropout1D with rate 0.2;
+3. a bidirectional LSTM with 128 units;
+4. batch normalization and dropout with rate 0.5;
+5. a softmax output sized from the fitted label encoder.
 
-It is trained for 10 epochs with batch size 64, Adam and categorical
-cross-entropy. The split uses `random_state=42`. The same 20% partition is passed
-as `validation_data` during training and subsequently used for evaluation; there
-is no third, independent test set.
+Training uses Adam, categorical cross-entropy, batch size 64 and at most 10
+epochs. Balanced class weights are computed from training labels only.
+EarlyStopping monitors validation loss with patience 2 and restores the best
+weights. Final accuracy and the per-class classification report are computed
+once on the independent test split.
 
-The course report records 97.69% accuracy and weighted precision/recall/F1 of
-0.98/0.98/0.98 on that partition. The source report's per-class `boredom` row
-contains precision 1.00, recall 0.99 and F1 0.95, which is internally
-inconsistent; the README reproduces the archived report rather than silently
-recalculating it.
+## Archived results and comparability
+
+The course report records 97.69% accuracy, weighted precision/recall/F1 of
+0.98/0.98/0.98 and macro precision/recall/F1 of 0.91/0.88/0.89. Those values came
+from the original workflow, which used one 20% partition for validation and
+evaluation, fitted the tokenizer before splitting and bypassed two preprocessing
+steps.
+
+The maintained pipeline fixes those issues, so the archived numbers are not
+claimed as results of the current code. The source report's Boredom row
+(precision 1.00, recall 0.99, F1 0.95) is also mathematically inconsistent and is
+retained only as source history.
+
+## Dependencies
+
+requirements.txt contains maintained compatible ranges. The direct package
+versions printed by the original Python 3.10 Colab runtime are preserved in
+requirements-recorded.txt. External Kaggle dataset versions can still change, so
+future runs remain reproducible within limits.
 
 ## Running the notebook
 
-1. Open `source/Emotion_Sentiment_Analysis_tool.ipynb` in Google Colab.
-2. Provide your own Kaggle API credential when prompted. Never commit it.
-3. Upload the two configuration files or adjust their paths for the runtime.
-4. Run the cells in order. Dataset downloads and model training require network,
-   disk space and a TensorFlow-capable runtime.
+1. Open source/Emotion_Sentiment_Analysis_tool.ipynb in Google Colab.
+2. Upload kaggle.json, datasets.txt and datasets_source.txt when prompted.
+3. Run cells in order with network, disk space and a TensorFlow-capable runtime.
 
-The exact dependency versions are not pinned, so later library releases can
-require small compatibility adjustments and can change results.
+The upload return value is assigned rather than displayed. The credential is
+copied to the Kaggle configuration directory with mode 0600, authenticated and
+removed from the working directory. Dataset and model outputs are ignored by
+Git.
 
-## Artifacts and reproducibility
+## Inference artifacts
 
-The notebook saves the trained Keras model in HDF5 format. It does not persist
-the fitted tokenizer, label encoder or the final class-order metadata. Therefore
-the HDF5 file alone is insufficient for reliable standalone inference; those
-preprocessing objects must be recreated from the same data or added to a future
-export format.
+After training, the artifacts directory contains:
 
-Further reproducibility constraints are the unpinned environment, shuffled data
-without an explicit shuffle seed before splitting and external Kaggle dataset
-versions. The values in the project report should be treated as archived results
-of the documented run, not guaranteed output of every rerun.
+- emotion_classification_model.keras;
+- tokenizer.json;
+- labels.json;
+- preprocessing_config.json.
 
-## Security and data handling
+The tokenizer, ordered class list, vocabulary limit and sequence length are
+therefore available with the model. Generated artifacts are intentionally not
+committed.
 
-- `kaggle.json` and notebook upload-cell output must remain untracked.
-- Clear notebook outputs before committing to avoid leaking credentials, paths or
-  downloaded data.
-- Review individual dataset licences and terms before redistribution.
-- The project processes public research datasets; it does not include an API,
-  authentication layer or production privacy controls.
+## Validation and security
+
+scripts/validate_notebook.py verifies JSON-loadable notebook content, Python
+syntax after excluding notebook magics, cleared outputs and execution counters,
+and high-confidence secret patterns. The Notebook quality GitHub Actions workflow
+runs it on main, develop and pull requests.
+
+Notebook outputs must remain cleared even though the upload cell no longer
+renders credential bytes. Any credential ever committed must be revoked; deleting
+it from a later commit is not sufficient. Security reporting is described in
+SECURITY.md.
+
+## Licensing and data handling
+
+The MIT licence applies to original repository code and documentation only.
+THIRD_PARTY_NOTICES.md records dependency licences and Kaggle dataset metadata.
+The datasets are not redistributed. One source currently declares only an
+unclear Other licence on Kaggle, so its publisher's terms must be clarified
+before any redistribution.
+
+The input corpora include social-media text. Users remain responsible for
+applicable dataset terms, privacy requirements and appropriate use.

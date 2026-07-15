@@ -8,45 +8,73 @@
 
 > 🇵🇱 [Polish version](README.pl.md)
 
-> 🗓️ **Project period:** 2024
+> 🗓️ **Project period:** 2024 · maintained publication workflow: 2026
 
 > 📘 [Technical documentation](docs/TECHNICAL_DOCUMENTATION.md)
 
-A **text-based emotion classification** project built as a Jupyter Notebook. It trains a **recurrent neural network (bidirectional LSTM)** in **TensorFlow/Keras** to recognize the emotion expressed in a short text (e.g. tweets and messages), using ~382k samples aggregated from several public Kaggle datasets. Built for a **Big Data** course.
+A text emotion-classification project implemented as a Google Colab/Jupyter
+Notebook. It trains a bidirectional LSTM in TensorFlow/Keras over approximately
+382,000 samples aggregated from public Kaggle datasets and predicts one of
+14 emotion classes. The project was created for a Big Data course and is
+published as an educational portfolio project, not a production service.
 
 ## 📊 Datasets
 
-The project aggregates multiple emotion-labelled text datasets from Kaggle:
+| Dataset | Kaggle source |
+|---|---|
+| Emotion analysis based on text | [simaanjali/emotion-analysis-based-on-text](https://www.kaggle.com/datasets/simaanjali/emotion-analysis-based-on-text) |
+| Text emotion recognition | [shreejitcheela/text-emotion-recognition](https://www.kaggle.com/datasets/shreejitcheela/text-emotion-recognition) |
+| Emotion detection from text | [pashupatigupta/emotion-detection-from-text](https://www.kaggle.com/datasets/pashupatigupta/emotion-detection-from-text) |
+| Emotions | [nelgiriyewithana/emotions](https://www.kaggle.com/datasets/nelgiriyewithana/emotions) |
+| Emotion dataset | [abdallahwagih/emotion-dataset](https://www.kaggle.com/datasets/abdallahwagih/emotion-dataset) |
 
-| Dataset | Source (Kaggle) |
-|---------|-----------------|
-| Emotion analysis based on text | `simaanjali/emotion-analysis-based-on-text` |
-| Text emotion recognition | `shreejitcheela/text-emotion-recognition` |
-| Emotion detection from text | `pashupatigupta/emotion-detection-from-text` |
-| Emotions | `nelgiriyewithana/emotions` |
-| Emotion dataset | `abdallahwagih/emotion-dataset` |
-
-The list of dataset files used by the notebook is configured in [`source/config/datasets.txt`](source/config/datasets.txt), and their sources in [`source/config/datasets_source.txt`](source/config/datasets_source.txt).
+Dataset filenames are configured in
+[source/config/datasets.txt](source/config/datasets.txt), and Kaggle references
+in [source/config/datasets_source.txt](source/config/datasets_source.txt).
+Dataset files are downloaded at runtime and are not distributed in this
+repository. Licence details and cautions are recorded in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 <p align="center">
   <img src="docs/emotion-distribution.png" alt="Emotion class distribution" width="640"/>
 </p>
 
-*Combined dataset — distribution across the 14 emotion classes (heavily imbalanced toward `neutral`), a key factor handled during training.*
+*Archived combined-data distribution across 14 classes. The maintained workflow
+uses balanced class weights and reports per-class and macro-average metrics.*
 
-## 🧠 Model & results
+## 🧠 Maintained workflow
 
-The classifier is a **recurrent neural network (RNN)** with a **bidirectional LSTM** core, built in **TensorFlow/Keras**. It stacks an embedding layer, bidirectional LSTM, dropout and batch-normalisation, and a dense output layer to improve accuracy and curb overfitting.
+The notebook now applies one consistent preprocessing and evaluation path:
 
-- **Data** — ~**382,000** text samples aggregated from the Kaggle datasets above, across **14 emotion classes**, cleaned of mentions/URLs/non-alphanumeric characters, normalised, tokenised, padded and label-encoded before an **80/20** split. The notebook defines chat-word expansion and stop-word removal, but its recorded data-flow branch does not feed those intermediate results into training; see the technical documentation.
-- **Training** — 10 epochs; the project report records a final **accuracy of 97.69% on the 20% evaluation split** (overall ≈ 98%).
-- **Averages** — weighted precision / recall / F1 = **0.98 / 0.98 / 0.98**; macro-average precision / recall / F1 = **0.91 / 0.88 / 0.89**.
+- validates the required text and emotion columns and fails on unknown labels;
+- removes missing, empty and duplicate texts, then applies regex cleaning,
+  chat-abbreviation expansion, case-insensitive stop-word removal and whitespace
+  normalization;
+- uses seed 42 and a stratified 80/10/10 train/validation/test split;
+- fits the tokenizer only on training text and maps unseen words to an OOV token;
+- trains the embedding + bidirectional LSTM with balanced class weights and early
+  stopping on the validation split;
+- evaluates the model once on the independent test split;
+- exports the Keras model, tokenizer, label order and preprocessing settings
+  needed for standalone inference.
+
+No new full training run is committed with this maintenance update. A rerun will
+produce metrics that are not directly comparable with the archived experiment,
+because the data path and evaluation protocol were corrected.
+
+## 📋 Archived 2024 results
+
+The included Big Data report records results from the original 80/20 workflow:
+
+- accuracy: 97.69%;
+- weighted precision / recall / F1: 0.98 / 0.98 / 0.98;
+- macro precision / recall / F1: 0.91 / 0.88 / 0.89.
 
 <details>
-<summary><b>📋 Per-class classification report</b></summary>
+<summary><b>Per-class report reproduced from the course report</b></summary>
 
 | Emotion | Precision | Recall | F1-score |
-|---|---|---|---|
+|---|---:|---:|---:|
 | Anger | 0.85 | 0.75 | 0.79 |
 | Boredom | 1.00 | 0.99 | 0.95 |
 | Empty | 0.99 | 0.99 | 0.99 |
@@ -64,39 +92,58 @@ The classifier is a **recurrent neural network (RNN)** with a **bidirectional LS
 
 </details>
 
-These are the results recorded in the included Big Data course report. Because the dataset is strongly imbalanced toward `neutral`, the per-class and macro-average scores are more informative than overall accuracy alone; retraining may produce slightly different values.
-
-> **Source note:** the report lists `Boredom` as precision 1.00, recall 0.99 and F1 0.95. The F1 value is not mathematically consistent with the reported precision and recall; it is retained here unchanged because the notebook output needed to recalculate it is not included.
-
-Once trained, the model predicts the emotion of a new sentence — e.g. a cheerful message → *happiness*, an anxious one → *fear*. Full methodology is in the [Big Data course report](documents/).
+The report's Boredom row is internally inconsistent: precision 1.00 and recall
+0.99 cannot yield F1 0.95. The value is retained as an archived source value and
+must not be interpreted as a newly verified result.
 
 ## 📂 Repository structure
 
 | Path | Description |
-|------|-------------|
-| `source/Emotion_Sentiment_Analysis_tool.ipynb` | Main notebook — data loading, preprocessing, training, and evaluation |
-| `source/config/` | Dataset configuration files |
-| `documents/` | Project documentation (Big Data course report) |
+|---|---|
+| source/Emotion_Sentiment_Analysis_tool.ipynb | Complete loading, ETL, training, evaluation and export workflow |
+| source/config/ | Dataset filename and Kaggle-source configuration |
+| requirements.txt | Maintained compatible dependency ranges |
+| requirements-recorded.txt | Direct versions observed in the archived 2024 Colab run |
+| scripts/validate_notebook.py | Static notebook syntax, output and secret check |
+| docs/ | Technical documentation and class-distribution chart |
+| documents/ | Original Big Data course report |
+| THIRD_PARTY_NOTICES.md | External dependency and dataset notices |
 
 ## 🚀 Getting started
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Kamilr616/Emotion_sentiment_analysis.git
-   cd Emotion_sentiment_analysis
-   ```
-2. Open `source/Emotion_Sentiment_Analysis_tool.ipynb` in **Google Colab**.
-3. Use the upload cell to provide your own `kaggle.json` plus the two files from `source/config/`.
-4. Run the cells top-to-bottom. Never save or commit the output of the credentials-upload cell.
+1. Clone the repository.
 
-## 🧰 Tech stack
+~~~bash
+git clone https://github.com/Kamilr616/Emotion_sentiment_analysis.git
+cd Emotion_sentiment_analysis
+~~~
 
-Python · TensorFlow / Keras · pandas · NumPy · NLTK · Jupyter Notebook · Kaggle API
+2. Open source/Emotion_Sentiment_Analysis_tool.ipynb in Google Colab.
+3. Upload your own kaggle.json and both files from source/config/ when prompted.
+4. Run cells from top to bottom.
 
-## 📄 License
+The upload result is assigned to a variable so credential bytes are not rendered.
+The notebook copies the credential to the Kaggle configuration directory with
+0600 permissions and removes the uploaded working copy. Never commit credentials,
+downloaded datasets, notebook outputs or generated model artifacts.
 
-This project is licensed under the [MIT License](LICENSE).
+For local execution, install requirements.txt. To approximate the original 2024
+environment, use Python 3.10 and requirements-recorded.txt.
+
+## 🔒 Validation and security
+
+The Notebook quality GitHub Actions workflow runs
+scripts/validate_notebook.py on main, develop and pull requests. It rejects
+committed outputs, non-null execution counters, invalid Python syntax and
+high-confidence secret patterns. See [SECURITY.md](SECURITY.md) for reporting.
+
+## 📄 Licence
+
+Original repository code and documentation are licensed under the
+[MIT License](LICENSE). External datasets and runtime dependencies are not
+relicensed by MIT; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## 👤 Author
 
-**Kamil Rataj** — [GitHub](https://github.com/Kamilr616) · [LinkedIn](https://www.linkedin.com/in/kamil-r-153ab7121/)
+**Kamil Rataj** — [GitHub](https://github.com/Kamilr616) ·
+[LinkedIn](https://www.linkedin.com/in/kamil-r-153ab7121/)

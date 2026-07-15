@@ -8,45 +8,76 @@
 
 > 🇬🇧 [English version](README.md)
 
-> 🗓️ **Okres realizacji:** 2024
+> 🗓️ **Okres realizacji:** 2024 · utrzymanie wersji publikacyjnej: 2026
 
 > 📘 [Dokumentacja techniczna](docs/TECHNICAL_DOCUMENTATION.pl.md)
 
-Projekt **klasyfikacji emocji na podstawie tekstu** zrealizowany jako notatnik Jupyter. Trenuje **rekurencyjną sieć neuronową (dwukierunkowy LSTM)** w **TensorFlow/Keras**, aby rozpoznać emocję wyrażoną w krótkim tekście (np. tweecie, wiadomości), na ~382 tys. próbek zagregowanych z kilku publicznych zbiorów Kaggle. Powstał na przedmiot **Big Data**.
+Projekt klasyfikacji emocji tekstu zaimplementowany jako notatnik Google
+Colab/Jupyter. Trenuje dwukierunkowy LSTM w TensorFlow/Keras na około 382 000
+próbek zagregowanych z publicznych zbiorów Kaggle i przewiduje jedną z 14 klas
+emocji. Projekt powstał na przedmiot Big Data i jest publikowany jako projekt
+edukacyjny/portfolio, a nie usługa produkcyjna.
 
 ## 📊 Zbiory danych
 
-Projekt agreguje kilka zbiorów tekstów z etykietami emocji z Kaggle:
+| Zbiór danych | Źródło Kaggle |
+|---|---|
+| Emotion analysis based on text | [simaanjali/emotion-analysis-based-on-text](https://www.kaggle.com/datasets/simaanjali/emotion-analysis-based-on-text) |
+| Text emotion recognition | [shreejitcheela/text-emotion-recognition](https://www.kaggle.com/datasets/shreejitcheela/text-emotion-recognition) |
+| Emotion detection from text | [pashupatigupta/emotion-detection-from-text](https://www.kaggle.com/datasets/pashupatigupta/emotion-detection-from-text) |
+| Emotions | [nelgiriyewithana/emotions](https://www.kaggle.com/datasets/nelgiriyewithana/emotions) |
+| Emotion dataset | [abdallahwagih/emotion-dataset](https://www.kaggle.com/datasets/abdallahwagih/emotion-dataset) |
 
-| Zbiór danych | Źródło (Kaggle) |
-|--------------|-----------------|
-| Emotion analysis based on text | `simaanjali/emotion-analysis-based-on-text` |
-| Text emotion recognition | `shreejitcheela/text-emotion-recognition` |
-| Emotion detection from text | `pashupatigupta/emotion-detection-from-text` |
-| Emotions | `nelgiriyewithana/emotions` |
-| Emotion dataset | `abdallahwagih/emotion-dataset` |
-
-Lista plików używanych przez notatnik jest skonfigurowana w [`source/config/datasets.txt`](source/config/datasets.txt), a ich źródła w [`source/config/datasets_source.txt`](source/config/datasets_source.txt).
+Nazwy plików są skonfigurowane w
+[source/config/datasets.txt](source/config/datasets.txt), a identyfikatory Kaggle
+w [source/config/datasets_source.txt](source/config/datasets_source.txt). Zbiory
+są pobierane podczas uruchomienia i nie są rozpowszechniane w repozytorium.
+Licencje oraz zastrzeżenia opisuje
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 <p align="center">
   <img src="docs/emotion-distribution.png" alt="Rozkład klas emocji" width="640"/>
 </p>
 
-*Połączony zbiór — rozkład 14 klas emocji (silnie niezbalansowany w stronę `neutral`), kluczowy czynnik uwzględniony podczas treningu.*
+*Archiwalny rozkład połączonych danych w 14 klasach. Utrzymywany pipeline używa
+zbalansowanych wag klas oraz raportuje metryki per klasa i makro-średnie.*
 
-## 🧠 Model i wyniki
+## 🧠 Utrzymywany pipeline
 
-Klasyfikator to **rekurencyjna sieć neuronowa (RNN)** z rdzeniem **dwukierunkowego LSTM**, zbudowana w **TensorFlow/Keras**. Łączy warstwę embeddingu, dwukierunkowy LSTM, dropout i normalizację wsadową oraz gęstą warstwę wyjściową, aby poprawić dokładność i ograniczyć przeuczenie.
+Notatnik korzysta teraz z jednego spójnego przebiegu przetwarzania i ewaluacji:
 
-- **Dane** — ~**382 000** próbek tekstu zagregowanych z powyższych zbiorów Kaggle, w **14 klasach emocji**, oczyszczonych ze wzmianek/URL/znaków niealfanumerycznych, znormalizowanych, stokenizowanych, dopełnionych i zakodowanych przed podziałem **80/20**. Notatnik definiuje rozwijanie skrótów czatowych i usuwanie stop-słów, ale zapisana gałąź przepływu nie przekazuje tych wyników pośrednich do treningu; szczegóły opisuje dokumentacja techniczna.
-- **Trening** — 10 epok; raport projektowy podaje końcową **dokładność 97,69% na 20-procentowym zbiorze ewaluacyjnym** (ogólna ≈ 98%).
-- **Średnie** — ważona precyzja / czułość / F1 = **0,98 / 0,98 / 0,98**; makro-średnia precyzja / czułość / F1 = **0,91 / 0,88 / 0,89**.
+- sprawdza wymagane kolumny tekstu i emocji oraz przerywa pracę dla nieznanych
+  etykiet;
+- usuwa rekordy puste, niepełne i zduplikowane, a następnie wykonuje czyszczenie
+  regex, rozwijanie skrótów czatowych, usuwanie stop-słów bez rozróżniania
+  wielkości liter i normalizację odstępów;
+- używa ziarna 42 oraz stratyfikowanego podziału 80/10/10 na trening, walidację i
+  test;
+- dopasowuje tokenizer wyłącznie do tekstów treningowych, a nieznane słowa mapuje
+  na token OOV;
+- trenuje embedding + dwukierunkowy LSTM ze zbalansowanymi wagami klas i early
+  stoppingiem opartym na walidacji;
+- wykonuje końcową ewaluację jeden raz na niezależnym zbiorze testowym;
+- eksportuje model Keras, tokenizer, kolejność etykiet i ustawienia preprocessingu
+  potrzebne do samodzielnej inferencji.
+
+W tej aktualizacji utrzymaniowej nie zapisano nowego pełnego treningu. Ponowne
+uruchomienie da metryki, których nie należy bezpośrednio porównywać z archiwalnym
+eksperymentem, ponieważ poprawiono przepływ danych i protokół ewaluacji.
+
+## 📋 Archiwalne wyniki z 2024 roku
+
+Dołączony raport Big Data zapisuje wyniki pierwotnego przebiegu 80/20:
+
+- accuracy: 97,69%;
+- ważona precision / recall / F1: 0,98 / 0,98 / 0,98;
+- makro precision / recall / F1: 0,91 / 0,88 / 0,89.
 
 <details>
-<summary><b>📋 Raport klasyfikacji per klasa</b></summary>
+<summary><b>Raport per klasa przepisany ze sprawozdania</b></summary>
 
-| Emocja | Precyzja | Czułość | F1 |
-|---|---|---|---|
+| Emocja | Precision | Recall | F1 |
+|---|---:|---:|---:|
 | Anger | 0.85 | 0.75 | 0.79 |
 | Boredom | 1.00 | 0.99 | 0.95 |
 | Empty | 0.99 | 0.99 | 0.99 |
@@ -64,39 +95,61 @@ Klasyfikator to **rekurencyjna sieć neuronowa (RNN)** z rdzeniem **dwukierunkow
 
 </details>
 
-Są to wyniki zapisane w dołączonym sprawozdaniu z przedmiotu Big Data. Zbiór jest silnie niezbalansowany na korzyść klasy `neutral`, dlatego wyniki per klasa i makro-średnie są bardziej miarodajne niż sama accuracy; ponowny trening może dać nieznacznie inne wartości.
-
-> **Uwaga o źródle:** sprawozdanie podaje dla klasy `Boredom` precyzję 1,00, czułość 0,99 i F1 0,95. Wartość F1 nie jest matematycznie spójna z podaną precyzją i czułością; pozostawiono ją bez zmian, ponieważ w repozytorium nie ma wyniku notatnika pozwalającego ją ponownie obliczyć.
-
-Po wytrenowaniu model przewiduje emocję nowego zdania — np. radosna wiadomość → *happiness*, pełna niepokoju → *fear*. Pełna metodyka znajduje się w [raporcie z przedmiotu Big Data](documents/).
+Wiersz Boredom w raporcie jest wewnętrznie niespójny: precision 1,00 i recall
+0,99 nie mogą dać F1 0,95. Wartość zachowano jako archiwalną wartość źródłową i
+nie należy jej interpretować jako nowo zweryfikowanego wyniku.
 
 ## 📂 Struktura repozytorium
 
 | Ścieżka | Opis |
-|---------|------|
-| `source/Emotion_Sentiment_Analysis_tool.ipynb` | Główny notatnik — wczytywanie danych, preprocessing, trening i ewaluacja |
-| `source/config/` | Pliki konfiguracyjne zbiorów danych |
-| `documents/` | Dokumentacja projektu (raport z przedmiotu Big Data) |
+|---|---|
+| source/Emotion_Sentiment_Analysis_tool.ipynb | Wczytywanie, ETL, trening, ewaluacja i eksport |
+| source/config/ | Konfiguracja nazw plików i źródeł Kaggle |
+| requirements.txt | Utrzymywane zgodne zakresy zależności |
+| requirements-recorded.txt | Bezpośrednie wersje zapisane w środowisku Colab 2024 |
+| scripts/validate_notebook.py | Statyczna kontrola składni, outputów i sekretów |
+| docs/ | Dokumentacja techniczna i wykres rozkładu klas |
+| documents/ | Oryginalne sprawozdanie Big Data |
+| THIRD_PARTY_NOTICES.md | Informacje o zewnętrznych zależnościach i danych |
 
 ## 🚀 Szybki start
 
-1. Sklonuj repozytorium:
-   ```bash
-   git clone https://github.com/Kamilr616/Emotion_sentiment_analysis.git
-   cd Emotion_sentiment_analysis
-   ```
-2. Otwórz `source/Emotion_Sentiment_Analysis_tool.ipynb` w **Google Colab**.
-3. W komórce uploadu przekaż własny `kaggle.json` oraz dwa pliki z `source/config/`.
-4. Wykonaj komórki od góry do dołu. Nie zapisuj ani nie commituj outputu komórki wgrywającej dane dostępowe.
+1. Sklonuj repozytorium.
 
-## 🧰 Stos technologiczny
+~~~bash
+git clone https://github.com/Kamilr616/Emotion_sentiment_analysis.git
+cd Emotion_sentiment_analysis
+~~~
 
-Python · TensorFlow / Keras · pandas · NumPy · NLTK · Jupyter Notebook · Kaggle API
+2. Otwórz source/Emotion_Sentiment_Analysis_tool.ipynb w Google Colab.
+3. Po wyświetleniu formularza wgraj własny kaggle.json oraz oba pliki z
+   source/config/.
+4. Wykonaj komórki od góry do dołu.
+
+Wynik uploadu jest przypisywany do zmiennej, więc bajty credentiala nie są
+renderowane. Notatnik kopiuje credential do katalogu konfiguracji Kaggle z
+prawami 0600 i usuwa przesłaną kopię roboczą. Nigdy nie commituj credentials,
+pobranych danych, outputów notatnika ani wygenerowanych artefaktów modelu.
+
+Przy uruchomieniu lokalnym zainstaluj requirements.txt. Aby odtworzyć środowisko
+zbliżone do pierwotnego Colab z 2024 roku, użyj Pythona 3.10 i
+requirements-recorded.txt.
+
+## 🔒 Walidacja i bezpieczeństwo
+
+Workflow GitHub Actions Notebook quality uruchamia
+scripts/validate_notebook.py dla main, develop i pull requestów. Odrzuca zapisane
+outputy, niezerowe liczniki wykonania, błędną składnię Python i wzorce sekretów o
+wysokiej pewności. Zasady zgłaszania opisuje [SECURITY.md](SECURITY.md).
 
 ## 📄 Licencja
 
-Projekt udostępniony na licencji [MIT](LICENSE).
+Oryginalny kod i dokumentacja repozytorium są udostępnione na
+[licencji MIT](LICENSE). Zewnętrzne zbiory danych i zależności uruchomieniowe nie
+są relicencjonowane przez MIT; zobacz
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## 👤 Autor
 
-**Kamil Rataj** — [GitHub](https://github.com/Kamilr616) · [LinkedIn](https://www.linkedin.com/in/kamil-r-153ab7121/)
+**Kamil Rataj** — [GitHub](https://github.com/Kamilr616) ·
+[LinkedIn](https://www.linkedin.com/in/kamil-r-153ab7121/)
